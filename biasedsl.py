@@ -1,5 +1,6 @@
-import random
 import math
+from random import seed, randint, random
+import matplotlib.pyplot as plt
 
 #Class to implement node
 class Node(object):
@@ -22,9 +23,11 @@ class SkipList(object):
 
 	# function to calculate rank of a node
 	def rank(self, wi, a):
+		if wi == 0:
+			return 0
 		return math.floor(math.log(wi,a))
 
-	def insertElement(self, key, w, a, elem):
+	def insertElement(self, key, w, a, b, elem):
 		update = [None]*(self.MAXLVL+1)
 		current = self.header
 
@@ -50,7 +53,10 @@ class SkipList(object):
 				update[i].forward[i] = n
 
 		lst.I2(key,elem,a)
-		lst.I1(elem,a)
+		#lst.displayList(elem)
+		lst.I1(elem,b)
+
+		#print("Inserted ",key)
 
 	# function to get height of i-
 	def height_prev_elem(self, key, elem):
@@ -254,7 +260,7 @@ class SkipList(object):
 							self.demote_node(node_u.key,hu1) 
 
 	# check if node violates I1
-	def I1(self, elem, a):
+	def I1(self, elem, b):
 		node = self.header
 		for j in range(0,self.level+1):
 			#print("j = ",j)
@@ -270,8 +276,9 @@ class SkipList(object):
 					if count > b:
 						start = start.forward[j]
 						start = start.forward[j]
+						current = start.forward[j]
 						self.promote_node(start.key,j+1)
-						#print(start.key)
+						prev = -1
 				elif current.height == j and prev == -1:
 					#print("2 = ",current.key)
 					count = 1
@@ -283,6 +290,10 @@ class SkipList(object):
 					prev = -1
 					count = 0
 					current = current.forward[j]
+
+	def fingerSearch(self, key1, key2):
+		head = self.header
+		node1 = self.search(key1)		
 
 	def displayList(self, elem):
 		print("\n****Skip List****")
@@ -314,6 +325,26 @@ class SkipList(object):
 			node = node.forward[0]
 		print(" ")
 
+	def cost(self, elem, p):
+		h = [] # to store horizontal costs of all the elements
+		for key in elem:
+			c = 0
+			current = self.header
+			for i in range(self.level,-1,-1):
+				while(current.forward[i] and current.forward[i].key < key):
+					current = current.forward[i]
+					c = c + 1
+			current = current.forward[0]
+			c = c + 1
+			h.append(c)
+		#print(h)
+		total_cost = 0
+		for i in range(len(h)):
+			total_cost = total_cost + (h[i]*p[i])
+		total_cost = total_cost + self.level
+		return total_cost
+
+
 if __name__ == "__main__":
 	print("Enter n:") 
 	n = int(input()) #number of elements in list
@@ -326,12 +357,16 @@ if __name__ == "__main__":
 	print("Enter access weights:")
 	w = [] #list of weights
 	w = list(map(float,input().strip().split()))[:n]
-	print(w)
+	# print(w)
+	p = []
+	for i in w:
+		p.append(i/sum(w))
+	#print(p)
 	a = 2
 	b = 4	
 	lst = SkipList(10)
 	for i in range(n):
-		lst.insertElement(elem[i],w[i],a,elem)
+		lst.insertElement(elem[i],w[i],a,b,elem)
 		lst.displayList(elem)
 		lst.displayHeight()
-		#print(lst.level)
+	lst.cost(elem,p)
